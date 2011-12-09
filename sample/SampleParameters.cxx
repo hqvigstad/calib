@@ -20,6 +20,7 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+#include "assert.h"
 #include "SampleParameters.h"
 #include "TArrayI.h"
 #include "TH2.h"
@@ -205,18 +206,21 @@ void SampleParameters::SetCC ( UInt_t index, Int_t cc )
 }
 
 
-void SampleParameters::SetLocalPos ( UInt_t index, TVector3* localPos )
+void SampleParameters::SetLocalPos ( UInt_t index, const TVector3& localPos )
 {
   if( fNGood <= index )
     Error("SetLocalPos", "index out of bounds");
 
   if( ! fLocalPosArray )
     fLocalPosArray = new TObjArray(fNGood);
-
-  fLocalPosArray->AddAt(localPos, index);
+  fLocalPosArray->SetOwner();
+  if( ! fLocalPosArray->IsOwner() )
+    Error("SetLocalPos", "fLocalPosArray is not owner");
+	  
+  fLocalPosArray->AddAt(new TVector3(localPos), index);
 }
 
-void SampleParameters::SetT ( UInt_t index, TGeoHMatrix T )
+void SampleParameters::SetT ( UInt_t index, const TGeoHMatrix& T )
 {
   if( 5 <= index );
     Error("SetT", "index out of bounds");

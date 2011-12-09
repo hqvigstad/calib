@@ -66,11 +66,11 @@ public:
   
   void SetCC(UInt_t index, Int_t cc);
   void SetCS(Int_t cs) { fCS = cs; }
-  void SetLocalPos(UInt_t index, TVector3* localPos);
+  void SetLocalPos(UInt_t index, const TVector3& localPos);
   void SetLogWeight(Float_t logWeight) { fLogWeight = logWeight; }
   void SetNonLinearParams(const TArrayF& paramArray) {fNonLinearParams = paramArray; }
   void SetNonLinearCorrectionVersion(const TString& name) { fNonLinearCorrectionVersion = name; }
-  void SetT(UInt_t index, TGeoHMatrix T);
+  void SetT(UInt_t module, const TGeoHMatrix& T);
   void SetIncidentVector(const TVector3& incVector) { fIncidentVector = incVector; }
   void SetParA(Float_t para) { fParA = para; }
   void SetParB(Float_t parb) { fParB = parb; }
