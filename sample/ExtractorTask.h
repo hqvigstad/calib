@@ -26,7 +26,11 @@
 
 #include "AliAnalysisTaskSE.h"
 #include "SampleParameters.h"
+#include "Sample.h"
+#include "TRefArray.h"
 
+class AliESDEvent;
+class TList;
 
 
 class ExtractorTask : public AliAnalysisTaskSE
@@ -40,35 +44,26 @@ public:
     virtual void UserExec(Option_t * );
     virtual void Terminate(Option_t * );    
 
+    static void GetClusters(const AliESDEvent* event, TRefArray* toArray);
     
-    struct ClusterParams {
-      ClusterParams(Int_t nAmps=0) :energy(0), pos({0}), amps(0) { amps = new Float_t[nAmps]; amps = {0}; }
-      ~ClusterParams() { delete amps; }
-      Float_t energy;
-      Float_t pos[3];
-      Float_t* amps;
-    private:
-      ClusterParams(const ClusterParams& other); // Not implemted, declared for suppression of warnings
-      ClusterParams& operator= (const ClusterParams& other); // Not implemted, declared for suppression of warnings
-    };
-      
-    const static UInt_t kNMod = 5;
-    const static UInt_t kNRowX = 64;
-    const static UInt_t kNColZ = 56;
     
 private:
     ExtractorTask(const ExtractorTask & );// Not Implemented
-    ExtractorTask operator= (const ExtractorTask & );// Not Implemented
+    ExtractorTask& operator= (const ExtractorTask & );// Not Implemented
+
+    // constants
+    const static UInt_t kNMod = 5;
+    const static UInt_t kNRowX = 64;
+    const static UInt_t kNColZ = 56;
+
     
     void SetParameters(SampleParameters* params);
 
     // member variables
-    TTree* fSampleTree;
-    TLorentzVector* fMomentum;
-    Double32_t fVertex[3];
-    ClusterParams* fClu1;
-    ClusterParams* fClu2;
     SampleParameters* fParameters;
+    TTree* fSampleTree;
+    Sample* fSample;
+    TList* fHistList;
     
     ClassDef(ExtractorTask, 1);
 };

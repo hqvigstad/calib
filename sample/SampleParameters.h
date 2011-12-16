@@ -40,6 +40,8 @@ public:
   ~SampleParameters();
   
   TCanvas* DrawBadChannelMap();
+
+  bool Equal(SampleParameters* other);
   
   void Print(Option_t* option = "") const;
   

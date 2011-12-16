@@ -28,81 +28,78 @@ ClassImp(ExtractorTask)
 #include "AliPHOSGeometry.h"
 #include "AliCDBManager.h"
 #include "AliCDBEntry.h"
-#include "TTree.h"
-#include "TClass.h"
 #include "AliCDBPath.h"
 #include "AliPHOSRecoParam.h"
-#include <AliPHOS.h>
+#include "AliPHOS.h"
+#include "AliESDEvent.h"
+
+#include "TTree.h"
+#include "TClass.h"
 #include "TGeoManager.h"
+#include "TList.h"
 
 
 
 ExtractorTask::ExtractorTask(const char* name)
 : AliAnalysisTaskSE(name),
+  fParameters(NULL),
   fSampleTree(NULL),
-/*  fMomentum(NULL),
-  fVertex({0}),
-  fClu1(NULL),
-  fClu2(NULL),*/
-  fParameters(NULL)  
+  fSample(NULL),
+  fHistList(NULL)
 {
-}
-
-
-ExtractorTask::ExtractorTask(const ExtractorTask& other)
-: AliAnalysisTaskSE(other.GetName()),
-  fSampleTree(NULL),
-/*  fMomentum(NULL),
-  fVertex({0}),
-  fClu1(NULL),
-  fClu2(NULL),*/
-  fParameters(NULL)
-{
+  
 }
 
 
 ExtractorTask::~ExtractorTask()
 {
   delete fSampleTree;
-  delete fMomentum;
-  delete fClu1;
+  delete fSample;
   delete fParameters;
+  delete fHistList;
 }
 
 
 void ExtractorTask::UserCreateOutputObjects()
 {
-  // *** Initiallize variables ***
+  // *** Initiallize parameters ***
   fParameters = new SampleParameters();
-  SetParameters(sampleParameters);
-  Int_t nGoodCells = sampleParameters->GetNGood();
-  fMomentum = new TLorentzVector;
-  fClu1 = new ClusterParams(nGoodCells);
-  fClu2 = new ClusterParams(nGoodCells);
-  
-  
-  
-  // *** Initiallize Sample Tree """
-  fSampleTree = new TTree("fSampleTree", "Sample Tree");
+  SetParameters(fParameters);
+  Int_t nGoodCells = fParameters->GetNGood();
 
-  fSampleTree->Branch("momentum", "TLorentzVector", &fMomentum );
-  fSampleTree->Branch("vertex", &fVertex, "vertex[3]/F");
-  
-  // cluster branches
-  char leafList[256];
-  sprintf(leafList, "energy/F:pos[3]:amps[%d]", nGoodCells); // array of 32-bit Floats, of size N
-  fSampleTree->Branch("cluster1", fClu1, leafList );
-  fSampleTree->Branch("cluster2", fClu2, leafList );
-  
-  fSampleTree->Branch("parameters", "SampleParameters", &fParameters);
-  
- //DefineOutput(1, fSampleTree); 
+  // *** Initiallize Sample Tree """
+  fSample = new Sample(nGoodCells);
+  fSampleTree = new TTree("fSampleTree", "Sample Tree");
+  fSampleTree->Branch("samples", "Sample", &fSample);
+
+  // *** Histograms ***
+  fHistList = new TList;
+
+  //DefineOutput(fParameters, 1);
+  //DefineOutput(fSampleTree, 2);
+  //DefineInput(fHistList, 3);
 }
 
 
 Bool_t ExtractorTask::UserNotify()
 {
   return AliAnalysisTaskSE::UserNotify();
+}
+
+void ExtractorTask::UserExec ( Option_t* )
+{
+  AliESDEvent* esdEvent = dynamic_cast<AliESDEvent*>(InputEvent());
+
+  // Get Clusters
+  TRefArray* clusters = new TRefArray( esdEvent->GetNumberOfCaloClusters() /4 );
+  esdEvent->GetPHOSClusters(clusters);
+  
+  
+}
+
+void ExtractorTask::Terminate ( Option_t* )
+{
+  return; //TODO: write ExtractorTask::Terminate
 }
 
 

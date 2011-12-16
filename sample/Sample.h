@@ -76,12 +76,12 @@ private:
   // Cluster 1
   Float_t fEnergy1;
   const TVector3* fPosition1;
-  const TArrayF* fAmplitudes1;
+  TArrayF* fAmplitudes1;
 
   // Cluster 2
   Float_t fEnergy2;
   const TVector3* fPosition2;
-  const TArrayF* fAmplitudes2;
+  TArrayF* fAmplitudes2;
 
   ClassDef(Sample, 1);
 };

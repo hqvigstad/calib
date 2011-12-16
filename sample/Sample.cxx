@@ -21,12 +21,14 @@
 */
 
 #include "Sample.h"
+#include "TArrayF.h"
 
 ClassImp(Sample)
 
 Sample::Sample ( UInt_t N )
  : TObject(),
    fN(N),
+   fVertex(NULL),
    fEnergy1(0),
    fPosition1(NULL),
    fAmplitudes1(NULL),
@@ -44,18 +46,18 @@ Sample::~Sample()
 }
 
 
-void Sample::SetAmplitude1 ( Int_t index, Float_t amp )
+void Sample::SetAmplitude1 ( UInt_t index, Float_t amp )
 {
   if( ! fAmplitudes1 )
     fAmplitudes1 = new TArrayF(fN);
-  fAmplitudes1->Set(amp, index);
+  fAmplitudes1->SetAt(amp, index);
 }
 
 
-void Sample::SetAmplitude2 ( Int_t index, Float_t amp )
+void Sample::SetAmplitude2 ( UInt_t index, Float_t amp )
 {
   if( ! fAmplitudes2 )
     fAmplitudes2 = new TArrayF(fN);
-  fAmplitudes2->Set(amp, index);
+  fAmplitudes2->SetAt(amp, index);
 
 }

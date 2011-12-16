@@ -26,6 +26,8 @@
 #include "TH2.h"
 #include "AliPHOSGeometry.h"
 #include <TString.h>
+#include <TMath.h>
+#include <bits/mathdef.h>
 
 
 
@@ -132,6 +134,24 @@ TCanvas* SampleParameters::DrawBadChannelMap()
  
  return canv; 
 }
+
+bool SampleParameters::Equal ( SampleParameters* other)
+{
+  if( fNGood != other->fNGood )
+    return false;
+  for(unsigned int idx=0; idx<fNGood; ++fNGood)
+  {
+    if(fIDArray[idx] != other->fIDArray[idx] )
+      return false;
+    if(fCCArray[idx] != other->fCCArray[idx]) // should be machine exact equal
+      return false;
+    //TODO: complare local array
+  }
+  //TODO; finish SampleParameters::Equal
+ 
+  return true;
+}
+
 
 
 void SampleParameters::Print ( Option_t* /*option*/ ) const
