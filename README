@@ -1,1 +1,8 @@
-Calibration of PHOS, ALICE, CERN.
+(Outlier robust) NLLS Calibration for PHOS, ALICE, CERN.
+
+Requires the ROOT libraray.
+To use the sample extractor, ALIROOT & alien is also needed
+and ROOT needs to be compiled with alien support.
+
+To get/build/install ROOT (without full ALIROOT/alien support):
+http://root.cern.ch/drupal/content/installing-root-source
