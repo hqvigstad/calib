@@ -29,6 +29,7 @@ ClassImp(ExtractorTask)
 #include "AliCDBManager.h"
 #include "AliCDBEntry.h"
 #include "AliCDBPath.h"
+#include "AliESDVertex.h"
 #include "AliPHOSRecoParam.h"
 #include "AliPHOS.h"
 #include "AliESDEvent.h"
@@ -37,6 +38,8 @@ ClassImp(ExtractorTask)
 #include "TClass.h"
 #include "TGeoManager.h"
 #include "TList.h"
+#include "SampleCandidate.h"
+#include <TH2I.h>
 
 
 
@@ -45,7 +48,8 @@ ExtractorTask::ExtractorTask(const char* name)
   fParameters(NULL),
   fSampleTree(NULL),
   fSample(NULL),
-  fHistList(NULL)
+  fHistList(NULL),
+  fCandidatePtMass(NULL)
 {
   
 }
@@ -75,6 +79,10 @@ void ExtractorTask::UserCreateOutputObjects()
   // *** Histograms ***
   fHistList = new TList;
 
+  fCandidatePtMass = new TH2I("fCandidatePtMass", "fCandidatePtMass", 100, 0, 10,   100, 0, 0.5);
+  fHistList->Add(fCandidatePtMass);
+  
+
   //DefineOutput(fParameters, 1);
   //DefineOutput(fSampleTree, 2);
   //DefineInput(fHistList, 3);
@@ -89,17 +97,69 @@ Bool_t ExtractorTask::UserNotify()
 void ExtractorTask::UserExec ( Option_t* )
 {
   AliESDEvent* esdEvent = dynamic_cast<AliESDEvent*>(InputEvent());
-
+  if( ! esdEvent )
+    Error("UserExec", "InputEvent did not cast to esd");
+  AliESDVertex* vertex = (AliESDVertex*) esdEvent->GetPrimaryVertex();
+    
   // Get Clusters
-  TRefArray* clusters = new TRefArray( esdEvent->GetNumberOfCaloClusters() /4 );
-  esdEvent->GetPHOSClusters(clusters);
+  TRefArray* phosClusterArray = new TRefArray( esdEvent->GetNumberOfCaloClusters() /4 );
+  esdEvent->GetPHOSClusters(phosClusterArray);
+  std::vector<AliESDCaloCluster*> selectedClusters = SelectClusters(*phosClusterArray);
+  std::vector<SampleCandidate> candidates = ExtractCandidates(selectedClusters, vertex);
+  std::vector<SampleCandidate> selected = SelectCandidates(candidates);
+  
   
   
 }
 
 void ExtractorTask::Terminate ( Option_t* )
 {
+  fCandidatePtMass->DrawCopy();
   return; //TODO: write ExtractorTask::Terminate
+}
+
+
+
+std::vector< AliESDCaloCluster* > ExtractorTask::SelectClusters ( const TRefArray& clusters )
+{
+  std::vector<AliESDCaloCluster*> selected(clusters.GetEntries());
+  for(int idx = 0; idx < clusters.GetEntriesFast(); ++idx){
+    AliESDCaloCluster* cluster = dynamic_cast<AliESDCaloCluster*> (clusters.At(idx));
+    if(! cluster) {
+      Printf(" ERROR: ExtractorTask::SelectClusters, clusters argument in function had entry which did not cast to AliESDCaloCluster");
+      continue;
+    }
+    if( cluster->E() < 0.5 )
+      continue;
+    if( cluster->GetNCells() < 5 )
+      continue;
+    if( cluster->GetNExMax() > 1 )
+      continue;
+
+    selected.push_back(cluster);
+  }
+  return selected;
+}
+
+
+std::vector< SampleCandidate > ExtractorTask::ExtractCandidates
+( const std::vector< AliESDCaloCluster* >& clusters, AliESDVertex* vtx )
+{
+  std::vector< SampleCandidate > candidates;
+  for(unsigned int idx1 = 0; idx1 < clusters.size(); ++idx1) {
+    for(unsigned int idx2 = idx1; idx2 < clusters.size(); ++idx2) {
+      SampleCandidate candidate = SampleCandidate(clusters[idx1], clusters[idx2], vtx);
+      candidates.push_back(candidate);
+    }
+  }
+  return candidates;
+}
+
+
+std::vector< SampleCandidate > ExtractorTask::SelectCandidates ( const std::vector< SampleCandidate >& candidates )
+{
+  std::vector< SampleCandidate > selected;
+  return selected;
 }
 
 

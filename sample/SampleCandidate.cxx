@@ -25,7 +25,7 @@
 
 #include "SampleCandidate.h"
 #include <TVector3.h>
-#include <AliVertex.h>
+#include <AliESDVertex.h>
 
 SampleCandidate::SampleCandidate()
 : TObject(),
@@ -36,7 +36,7 @@ SampleCandidate::SampleCandidate()
 {
 }
 
-SampleCandidate::SampleCandidate ( AliVCluster* clu1, AliVCluster* clu2, AliVertex* vtx )
+SampleCandidate::SampleCandidate ( AliESDCaloCluster* clu1, AliESDCaloCluster* clu2, AliESDVertex* vtx )
 : TObject(),
   fMoment(NULL),
   fClu1(clu1),
@@ -45,7 +45,6 @@ SampleCandidate::SampleCandidate ( AliVCluster* clu1, AliVCluster* clu2, AliVert
 {
   if( !fClu1 || !fClu2 || !fVertex)
     Error("SampleCandidate", "some argument in SampleCandidate specific constructor is null");
-  //TODO: add check, should be AliESDCaloCluster or AliAODCaloCluster
 
   fMoment = new TLorentzVector;
   Double_t vtxarr[3];
@@ -66,6 +65,21 @@ SampleCandidate::SampleCandidate ( const SampleCandidate& other )
   if(other.fMoment)
     fMoment = new TLorentzVector( * other.fMoment );
 }
+
+SampleCandidate& SampleCandidate::operator= ( const SampleCandidate& other )
+{
+  TObject::operator=(other);
+
+  if(fMoment)
+    fMoment->operator=(*other.fMoment);
+  else
+    fMoment = new TLorentzVector(*other.fMoment);
+
+  fClu1 = other.fClu1;
+  fClu2 = other.fClu2;
+  fVertex = other.fVertex;
+}
+
 
 SampleCandidate::~SampleCandidate()
 {

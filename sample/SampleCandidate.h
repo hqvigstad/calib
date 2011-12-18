@@ -25,27 +25,29 @@
 
 #include "TObject.h"
 
+class AliESDVertex;
 class AliVertex;
 class TLorentzVector;
-class AliVCluster;
+class AliESDCaloCluster;
 
 class SampleCandidate : TObject {
 public:
   SampleCandidate();
-  SampleCandidate (AliVCluster* clu1, AliVCluster* clu2, AliVertex* vtx);
+  SampleCandidate (AliESDCaloCluster* clu1, AliESDCaloCluster* clu2, AliESDVertex* vtx);
   SampleCandidate(const SampleCandidate & other);
+  SampleCandidate & operator= (const SampleCandidate& other); 
   ~SampleCandidate();
 
   const TLorentzVector* GetMomentum() const { return fMoment; }
   
 
 private:
-  SampleCandidate & operator= (const SampleCandidate& other); // not implemented
+  
   
   TLorentzVector* fMoment;
-  AliVCluster* fClu1;
-  AliVCluster* fClu2;
-  AliVertex* fVertex;
+  AliESDCaloCluster* fClu1;
+  AliESDCaloCluster* fClu2;
+  AliESDVertex* fVertex;
 };
 
 #endif // SAMPLECANDIDATE_H

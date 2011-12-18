@@ -29,6 +29,15 @@
 #include "Sample.h"
 #include "TRefArray.h"
 
+#include <vector>
+#include <TH1F.h>
+#include <AliESDCaloCluster.h>
+#include <TRef.h>
+#include "SampleCandidate.h"
+
+class AliESDVertex;
+class TH2I;
+
 class AliESDEvent;
 class TList;
 
@@ -44,7 +53,11 @@ public:
     virtual void UserExec(Option_t * );
     virtual void Terminate(Option_t * );    
 
-    static void GetClusters(const AliESDEvent* event, TRefArray* toArray);
+    static std::vector<AliESDCaloCluster*> SelectClusters(const TRefArray& clusters);
+    static std::vector<SampleCandidate> ExtractCandidates(const std::vector<AliESDCaloCluster*>& selectedClusters,
+							  AliESDVertex* vtx );
+    static std::vector<SampleCandidate> SelectCandidates(const std::vector<SampleCandidate>& candidates);
+				       
     
     
 private:
@@ -64,6 +77,8 @@ private:
     TTree* fSampleTree;
     Sample* fSample;
     TList* fHistList;
+
+    TH2I* fCandidatePtMass;
     
     ClassDef(ExtractorTask, 1);
 };
