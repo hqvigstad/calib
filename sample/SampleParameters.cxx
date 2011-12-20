@@ -40,60 +40,59 @@ SampleParameters::SampleParameters(UInt_t nGood)
   fIDArray(nGood),
   fCCArray(nGood),
   fCS(0),
-  fLocalPosArray(NULL),
+  fLocalPosArray(nGood),
   fLogWeight(4.5), // from trunk rev.53223, AliPHOSRecoParam::AliPHOSRecoParam
   fNonLinearParams(0),
   fNonLinearCorrectionVersion(""),
-  fT({NULL}),
+  fT(5),
   fIncidentVector({0,0,0}), // from trunk rev.53223, AliPHOSClusterizerv1::WriteRecPoints
   fParA(0.925), // from trunk rev.53223, AliPHOSEmcRecPoint::EvalLocalPosition
   fParB(6.25)   // from trunk rev.53223, AliPHOSEmcRecPoint::EvalLocalPosition
 {
+  fLocalPosArray.SetOwner();
+  fT.SetOwner();
 }
 
 
-SampleParameters::SampleParameters(const SampleParameters& other)
-: fNGood(other.fNGood),
-  fIDArray(other.fIDArray),
-  fCCArray(other.fCCArray),
-  fCS(other.fCS),
-  fLocalPosArray((TObjArray*) other.fLocalPosArray->Clone()),
-  fLogWeight(other.fLogWeight), 
-  fNonLinearParams(other.fNonLinearParams),
-  fNonLinearCorrectionVersion(other.fNonLinearCorrectionVersion),
-  fT({NULL}),
-  fIncidentVector(other.fIncidentVector), // from trunk rev.53223, AliPHOSClusterizerv1::WriteRecPoints
-  fParA(other.fParA), 
-  fParB(other.fParB)   
-{
-  for(int mod = 0; mod <5; ++mod)
-    if( other.fT[mod] )
-      fT[mod] = new TGeoHMatrix( * other.fT[mod]);
-}
-
-
-SampleParameters& SampleParameters::operator= (const SampleParameters& other )
-{
- SetNGood( other.fNGood );
- fIDArray = other.fIDArray;
- fCCArray = other.fCCArray;
- fCS = other.fCS;
- for(unsigned int idx = 0; idx < fNGood; fNGood++){
-   if( fLocalPosArray->operator[](idx) )
-     fLocalPosArray->RemoveAt(idx);
-   if( other.fLocalPosArray->operator[](idx) )
-   fLocalPosArray->Add(new TVector3( * (TVector3*) other.fLocalPosArray->operator[](idx)));
- }
- 
- return *this;
-}
+// SampleParameters::SampleParameters(const SampleParameters& other)
+// : fNGood(other.fNGood),
+//   fIDArray(other.fIDArray),
+//   fCCArray(other.fCCArray),
+//   fCS(other.fCS),
+//   fLocalPosArray((TObjArray*) other.fLocalPosArray->Clone()),
+//   fLogWeight(other.fLogWeight), 
+//   fNonLinearParams(other.fNonLinearParams),
+//   fNonLinearCorrectionVersion(other.fNonLinearCorrectionVersion),
+//   fT({NULL}),
+//   fIncidentVector(other.fIncidentVector), // from trunk rev.53223, AliPHOSClusterizerv1::WriteRecPoints
+//   fParA(other.fParA), 
+//   fParB(other.fParB)   
+// {
+//   for(int mod = 0; mod <5; ++mod)
+//     if( other.fT[mod] )
+//       fT[mod] = new TGeoHMatrix( * other.fT[mod]);
+// }
+// 
+// 
+// SampleParameters& SampleParameters::operator= (const SampleParameters& other )
+// {
+//  SetNGood( other.fNGood );
+//  fIDArray = other.fIDArray;
+//  fCCArray = other.fCCArray;
+//  fCS = other.fCS;
+//  for(unsigned int idx = 0; idx < fNGood; fNGood++){
+//    if( fLocalPosArray->operator[](idx) )
+//      fLocalPosArray->RemoveAt(idx);
+//    if( other.fLocalPosArray->operator[](idx) )
+//    fLocalPosArray->Add(new TVector3( * (TVector3*) other.fLocalPosArray->operator[](idx)));
+//  }
+//  
+//  return *this;
+// }
 
 
 SampleParameters::~SampleParameters()
 {
-  delete fLocalPosArray;
-  for(int mod = 0; mod < 5; ++mod)
-    delete fT[mod];
 }
 
 
@@ -135,15 +134,15 @@ TCanvas* SampleParameters::DrawBadChannelMap()
  return canv; 
 }
 
-bool SampleParameters::Equal ( SampleParameters* other)
+bool SampleParameters::Equal ( const SampleParameters& other)
 {
-  if( fNGood != other->fNGood )
+  if( fNGood != other.fNGood )
     return false;
   for(unsigned int idx=0; idx<fNGood; ++fNGood)
   {
-    if(fIDArray[idx] != other->fIDArray[idx] )
+    if(fIDArray[idx] != other.fIDArray[idx] )
       return false;
-    if(fCCArray[idx] != other->fCCArray[idx]) // should be machine exact equal
+    if(fCCArray[idx] != other.fCCArray[idx]) // should be machine exact equal
       return false;
     //TODO: complare local array
   }
@@ -164,13 +163,22 @@ void SampleParameters::Print ( Option_t* /*option*/ ) const
 }
 
 
+const Int_t SampleParameters::FindIndex ( const UInt_t phosID ) const
+{
+  // returns the index of phosID, if found!
+  // if not found, returns -1.
+  // cost: linear (with N, number of entries).
+  
+  for(int idx = 0; idx < fIDArray.GetSize(); ++idx)
+    if( phosID == (UInt_t) fIDArray[idx] ) // IDs in array should be u.s.
+      return idx;
+  return -1;
+}
+
+
 const TVector3* SampleParameters::GetLocalPos ( UInt_t index ) const
 {
-  if( fLocalPosArray)
-    return dynamic_cast<TVector3*>(fLocalPosArray->operator[](index));
-  else
-    Warning("GetLocalPos", "fLocalPosArray is null");
-  return NULL;
+  return dynamic_cast<TVector3*>(fLocalPosArray.At(index));
 }
 
 
@@ -178,11 +186,12 @@ const TGeoHMatrix* SampleParameters::GetT ( UInt_t module ) const
 {
   // gets Transformation Matrix (PHOS Local -> Global ) for module
   
-  if( fT && module < 5 )
-    return fT[module];
-  else
-    Warning("GetT", "fT is null");
-  return NULL;
+  if( module < 5 )
+    return dynamic_cast<TGeoHMatrix*>( fT.At(module));
+  else {
+    Error("GetT", "module variable must be in range [0,4]");
+    return NULL;
+  }
 }
 
 
@@ -194,15 +203,11 @@ void SampleParameters::SetNGood ( UInt_t newNGood )
   
   fIDArray.Set( newNGood );
   fCCArray.Set( newNGood );
-  
-  if( ! fLocalPosArray ) {
-    fLocalPosArray = new TObjArray;
-    fLocalPosArray->SetOwner();
-  }
+
   if( newNGood < fNGood )
-    while( newNGood < (UInt_t) fLocalPosArray->GetEntriesFast() )
-      fLocalPosArray->RemoveLast();
-  fLocalPosArray->Expand(newNGood);
+    while( newNGood < (UInt_t) fLocalPosArray.GetEntriesFast())
+      fLocalPosArray.RemoveLast();
+  fLocalPosArray.Expand(newNGood);
   
   fNGood = newNGood;
 }
@@ -230,25 +235,20 @@ void SampleParameters::SetLocalPos ( UInt_t index, const TVector3& localPos )
 {
   if( fNGood <= index )
     Error("SetLocalPos", "index out of bounds");
-
-  if( ! fLocalPosArray )
-    fLocalPosArray = new TObjArray(fNGood);
-  fLocalPosArray->SetOwner();
-  if( ! fLocalPosArray->IsOwner() )
-    Error("SetLocalPos", "fLocalPosArray is not owner");
-	  
-  fLocalPosArray->AddAt(new TVector3(localPos), index);
+  
+  delete fLocalPosArray.At(index); // becouse AddAt does not clean, TODO: verify!
+  fLocalPosArray.AddAt(new TVector3(localPos), index);
+  fLocalPosArray.SetOwner(); // for peace of mind
 }
 
-void SampleParameters::SetT ( UInt_t index, const TGeoHMatrix& T )
+void SampleParameters::SetT ( UInt_t module, const TGeoHMatrix& T )
 {
-  if( 5 <= index );
-    Error("SetT", "index out of bounds");
-  
-  if( NULL == fT[index] )
-    fT[index] = new TGeoHMatrix(T);
-  else
-    fT[index]->operator=(T);
+  if( 5 <= module );
+    Error("SetT", "module out of bounds");
+
+  delete fT[module]; // becouse AddAt does not clean, TODO: verify!
+  fT.AddAt(new TGeoHMatrix(T), module);
+  fT.SetOwner(); // for peace of mind
 }
 
 

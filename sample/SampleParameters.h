@@ -30,25 +30,26 @@
 #include <TObjArray.h>
 #include <TVector3.h>
 #include <TGeoMatrix.h>
+#include <TMap.h>
 
 class SampleParameters : public TObject
 {
 public:
   SampleParameters(UInt_t nGood = 0);
-  SampleParameters(const SampleParameters& other );
-  SampleParameters& operator= (const SampleParameters& other );
+//   SampleParameters(const SampleParameters& other );
+//   SampleParameters& operator= (const SampleParameters& other );
   ~SampleParameters();
   
   TCanvas* DrawBadChannelMap();
 
-  bool Equal(SampleParameters* other);
-  
+
   void Print(Option_t* option = "") const;
-  
+
 
   // *** Getters ***
   const Int_t GetNGood() const { return fNGood; }
   const TArrayI& GetIDArray() const { return fIDArray; }
+  const Int_t FindIndex(UInt_t phosID) const;
 
   const TArrayF& GetCCArray() const { return fCCArray; }
   const Float_t GetCS() const { return fCS; }
@@ -60,12 +61,12 @@ public:
   const TVector3& GetIncidentVector() const { return fIncidentVector; }
   const Float_t GetPara() const {return fParA; }
   const Float_t GetParb() const {return fParB; }
-    
-  
+
+
   // *** Setters ***
   void SetNGood(UInt_t nGood);
   void SetID(UInt_t index, Int_t phosID);
-  
+
   void SetCC(UInt_t index, Int_t cc);
   void SetCS(Int_t cs) { fCS = cs; }
   void SetLocalPos(UInt_t index, const TVector3& localPos);
@@ -76,19 +77,21 @@ public:
   void SetIncidentVector(const TVector3& incVector) { fIncidentVector = incVector; }
   void SetParA(Float_t para) { fParA = para; }
   void SetParB(Float_t parb) { fParB = parb; }
-  
-  
+
+
 private:
+  bool Equal(const SampleParameters& other); // not finnished
+  
   UInt_t fNGood;
   TArrayI fIDArray; // [fNGood] PHOS ID of Good Channels
     
   TArrayF fCCArray; // [fNGood] 
   Float_t fCS; // AliPHOSGeometry::fCrystalShift, Distance from crystal center to front surface
-  TObjArray* fLocalPosArray; // [fNGood] Position of Cell
+  TObjArray fLocalPosArray; // [fNGood] Position of Cell
   Float_t fLogWeight; // AliPHOSClusterizerv1::fW0, recoParam->GetEMCLogWeight()
   TArrayF fNonLinearParams; // [6] if fNonLinearCorrectionVersion=="Henrik2010"
   TString fNonLinearCorrectionVersion; // "Henrik2010", or other
-  TGeoHMatrix* fT[5]; // [nModules] Transformation Matrixes (g=T*l, were l is local fram and g is global)
+  TObjArray fT; // [nModules] Transformation Matrixes (g=T*l, were l is local fram and g is global)
   TVector3 fIncidentVector;
   Float_t fParA; // depth correction AliPHOSEmcRecPoint::EvalLocalPosition::para, 0.925
   Float_t fParB;  // depth correction AliPHOSEmcRecPoint::EvalLocalPosition::parb, 0.925

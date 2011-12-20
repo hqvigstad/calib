@@ -38,30 +38,33 @@ public:
   virtual ~Sample();
 
 public:  
-  const TVector3* GetVertex() const { return fVertex; }
-  void SetVertex(const TVector3* vertex) {fVertex = vertex;}
+  const TVector3& GetVertex() const { return fVertex; }
+  void SetVertex(const TVector3& vertex) {fVertex = vertex;}
+
+  const Float_t GetMass() const { return fMass; }
+  void SetMass(const Float_t mass) {fMass = mass;}
 
 
-// Cluster 1
+  // Cluster 1
   Float_t GetEnergy1() const { return fEnergy1; }
   void SetEnergy1(Float_t energy1) {fEnergy1 = energy1;}
 
-  const TVector3* GetPostion1() const { return fPosition1; }
-  void SetPostion1(const TVector3* postion1) {fPosition1 = postion1;}
+  const TVector3& GetPostion1() const { return fPosition1; }
+  void SetPostion1(const TVector3& postion1) {fPosition1 = postion1;}
 
-  const TArrayF* GetAmplitudes1() const { return fAmplitudes1; }
-  void SetAmplitude1(UInt_t index, Float_t amp);
+  const TArrayF& Amplitudes1() const { return fAmplitudes1; }
+  TArrayF& Amplitude1() {return fAmplitudes1; }
 
 
   // Cluster 2
   Float_t GetEnergy2() const { return fEnergy2; }
   void SetEnergy2(Float_t energy2) {fEnergy2 = energy2;}
 
-  const TVector3* GetPostion2() const { return fPosition2; }
-  void SetPostion2(const TVector3* postion2) {fPosition2 = postion2;}
+  const TVector3& GetPostion2() const { return fPosition2; }
+  void SetPostion2(const TVector3& postion2) {fPosition2 = postion2;}
 
-  const TArrayF* GetAmplitudes2() const { return fAmplitudes2; }
-  void SetAmplitude2(UInt_t index, Float_t amp);
+  const TArrayF& Amplitudes2() const { return fAmplitudes2; }
+  TArrayF& Amplitude2() {return fAmplitudes2; }
 
 
 private:
@@ -71,17 +74,18 @@ private:
   UInt_t fN; // N, length of amplitudes, Immutable
 
   // Sample globals
-  const TVector3* fVertex;
+  Float_t fMass;
+  TVector3 fVertex;
 
   // Cluster 1
   Float_t fEnergy1;
-  const TVector3* fPosition1;
-  TArrayF* fAmplitudes1;
+  TVector3 fPosition1;
+  TArrayF fAmplitudes1;
 
   // Cluster 2
   Float_t fEnergy2;
-  const TVector3* fPosition2;
-  TArrayF* fAmplitudes2;
+  TVector3 fPosition2;
+  TArrayF fAmplitudes2;
 
   ClassDef(Sample, 1);
 };

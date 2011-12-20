@@ -2,6 +2,7 @@
 # author: Henrik Qvigstad <henrik.qvigstad@cern.ch>
 #
 # apptional components
+#     PHOS, 
 #
 # If ALIROOT is found, the following is defined:
 #  ALIROOT_FOUND - true if AliROOT is found

@@ -28,36 +28,18 @@ ClassImp(Sample)
 Sample::Sample ( UInt_t N )
  : TObject(),
    fN(N),
-   fVertex(NULL),
+   fMass(0),
+   fVertex(0,0,0),
    fEnergy1(0),
-   fPosition1(NULL),
-   fAmplitudes1(NULL),
+   fPosition1(0,0,0),
+   fAmplitudes1(N),
    fEnergy2(0),
-   fPosition2(NULL),
-   fAmplitudes2(NULL)
-
+   fPosition2(0,0,0),
+   fAmplitudes2(N)
 {
 }
 
 Sample::~Sample()
 {
-  delete fAmplitudes1;
-  delete fAmplitudes2;
 }
 
-
-void Sample::SetAmplitude1 ( UInt_t index, Float_t amp )
-{
-  if( ! fAmplitudes1 )
-    fAmplitudes1 = new TArrayF(fN);
-  fAmplitudes1->SetAt(amp, index);
-}
-
-
-void Sample::SetAmplitude2 ( UInt_t index, Float_t amp )
-{
-  if( ! fAmplitudes2 )
-    fAmplitudes2 = new TArrayF(fN);
-  fAmplitudes2->SetAt(amp, index);
-
-}

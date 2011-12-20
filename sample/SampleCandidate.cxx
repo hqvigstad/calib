@@ -29,7 +29,7 @@
 
 SampleCandidate::SampleCandidate()
 : TObject(),
-  fMoment(NULL),
+  fMoment(),
   fClu1(NULL),
   fClu2(NULL),
   fVertex(NULL)
@@ -38,7 +38,7 @@ SampleCandidate::SampleCandidate()
 
 SampleCandidate::SampleCandidate ( AliESDCaloCluster* clu1, AliESDCaloCluster* clu2, AliESDVertex* vtx )
 : TObject(),
-  fMoment(NULL),
+  fMoment(),
   fClu1(clu1),
   fClu2(clu2),
   fVertex(vtx)
@@ -46,44 +46,39 @@ SampleCandidate::SampleCandidate ( AliESDCaloCluster* clu1, AliESDCaloCluster* c
   if( !fClu1 || !fClu2 || !fVertex)
     Error("SampleCandidate", "some argument in SampleCandidate specific constructor is null");
 
-  fMoment = new TLorentzVector;
   Double_t vtxarr[3];
   fVertex->GetXYZ(vtxarr);
   TLorentzVector vec2;
-  fClu1->GetMomentum(*fMoment, vtxarr);
+  fClu1->GetMomentum(fMoment, vtxarr);
   fClu2->GetMomentum(vec2, vtxarr);
-  fMoment->operator+=( vec2 );
+  fMoment += vec2 ;
 }
 
 SampleCandidate::SampleCandidate ( const SampleCandidate& other )
 : TObject ( other ),
-  fMoment( NULL ),
+  fMoment( other.GetMomentum() ),
   fClu1(other.fClu1),
   fClu2(other.fClu2),
   fVertex(other.fVertex)
 {
-  if(other.fMoment)
-    fMoment = new TLorentzVector( * other.fMoment );
 }
 
 SampleCandidate& SampleCandidate::operator= ( const SampleCandidate& other )
 {
   TObject::operator=(other);
 
-  if(fMoment)
-    fMoment->operator=(*other.fMoment);
-  else
-    fMoment = new TLorentzVector(*other.fMoment);
+  fMoment = other.fMoment;
 
   fClu1 = other.fClu1;
   fClu2 = other.fClu2;
   fVertex = other.fVertex;
+
+  return *this;
 }
 
 
 SampleCandidate::~SampleCandidate()
 {
-  delete fMoment;
 }
 
 

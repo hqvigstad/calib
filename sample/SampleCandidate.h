@@ -24,6 +24,7 @@
 #define SAMPLECANDIDATE_H
 
 #include "TObject.h"
+#include <AliESD.h>
 
 class AliESDVertex;
 class AliVertex;
@@ -38,13 +39,14 @@ public:
   SampleCandidate & operator= (const SampleCandidate& other); 
   ~SampleCandidate();
 
-  const TLorentzVector* GetMomentum() const { return fMoment; }
+  const TLorentzVector& GetMomentum() const { return fMoment; }
+  AliESDCaloCluster* GetCluster1() const { return fClu1; }
+  AliESDCaloCluster* GetCluster2() const { return fClu2; }
+  AliESDVertex* GetVertex() const { return fVertex; }
   
 
 private:
-  
-  
-  TLorentzVector* fMoment;
+  TLorentzVector fMoment;
   AliESDCaloCluster* fClu1;
   AliESDCaloCluster* fClu2;
   AliESDVertex* fVertex;

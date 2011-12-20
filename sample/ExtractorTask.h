@@ -35,6 +35,7 @@
 #include <TRef.h>
 #include "SampleCandidate.h"
 
+class AliESDCaloCells;
 class AliESDVertex;
 class TH2I;
 
@@ -54,10 +55,9 @@ public:
     virtual void Terminate(Option_t * );    
 
     static std::vector<AliESDCaloCluster*> SelectClusters(const TRefArray& clusters);
-    static std::vector<SampleCandidate> ExtractCandidates(const std::vector<AliESDCaloCluster*>& selectedClusters,
-							  AliESDVertex* vtx );
+    static std::vector<SampleCandidate> ExtractCandidates(const std::vector<AliESDCaloCluster*>& selectedClusters, AliESDVertex* vtx );
     static std::vector<SampleCandidate> SelectCandidates(const std::vector<SampleCandidate>& candidates);
-				       
+    static void CandidateToSample(Sample& toSample, const SampleCandidate& candidate, const AliESDCaloCells& phosCells, const AliESDVertex& vtx, const SampleParameters& params);
     
     
 private:
@@ -70,15 +70,16 @@ private:
     const static UInt_t kNColZ = 56;
 
     
-    void SetParameters(SampleParameters* params);
+    void SetParameters(SampleParameters& params);
 
-    // member variables
+    // *** member variables ***
     SampleParameters* fParameters;
     TTree* fSampleTree;
     Sample* fSample;
     TList* fHistList;
 
     TH2I* fCandidatePtMass;
+    TH2I* fSelectedPtMass;
     
     ClassDef(ExtractorTask, 1);
 };

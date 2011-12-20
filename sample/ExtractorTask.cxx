@@ -49,9 +49,12 @@ ExtractorTask::ExtractorTask(const char* name)
   fSampleTree(NULL),
   fSample(NULL),
   fHistList(NULL),
-  fCandidatePtMass(NULL)
+  fCandidatePtMass(NULL),
+  fSelectedPtMass(NULL)
 {
-  
+  DefineOutput(1, SampleParameters::Class());
+  DefineOutput(2, TTree::Class());
+  DefineOutput(3, TList::Class());
 }
 
 
@@ -68,7 +71,7 @@ void ExtractorTask::UserCreateOutputObjects()
 {
   // *** Initiallize parameters ***
   fParameters = new SampleParameters();
-  SetParameters(fParameters);
+  SetParameters(*fParameters);
   Int_t nGoodCells = fParameters->GetNGood();
 
   // *** Initiallize Sample Tree """
@@ -81,11 +84,12 @@ void ExtractorTask::UserCreateOutputObjects()
 
   fCandidatePtMass = new TH2I("fCandidatePtMass", "fCandidatePtMass", 100, 0, 10,   100, 0, 0.5);
   fHistList->Add(fCandidatePtMass);
-  
+  fSelectedPtMass = new TH2I("fSelectedPtMass", "fSelectedPtMass", 100, 0, 10,   100, 0, 0.5);
+  fHistList->Add(fSelectedPtMass);
 
-  //DefineOutput(fParameters, 1);
-  //DefineOutput(fSampleTree, 2);
-  //DefineInput(fHistList, 3);
+  PostData(1, fParameters);
+  PostData(2, fSample);
+  PostData(3, fHistList);
 }
 
 
@@ -100,6 +104,7 @@ void ExtractorTask::UserExec ( Option_t* )
   if( ! esdEvent )
     Error("UserExec", "InputEvent did not cast to esd");
   AliESDVertex* vertex = (AliESDVertex*) esdEvent->GetPrimaryVertex();
+  AliESDCaloCells* phosCells = esdEvent->GetPHOSCells();
     
   // Get Clusters
   TRefArray* phosClusterArray = new TRefArray( esdEvent->GetNumberOfCaloClusters() /4 );
@@ -107,14 +112,26 @@ void ExtractorTask::UserExec ( Option_t* )
   std::vector<AliESDCaloCluster*> selectedClusters = SelectClusters(*phosClusterArray);
   std::vector<SampleCandidate> candidates = ExtractCandidates(selectedClusters, vertex);
   std::vector<SampleCandidate> selected = SelectCandidates(candidates);
-  
-  
-  
+
+
+  // Fill Tree
+  for(UInt_t idx = 0; idx < selected.size(); ++idx) {
+    CandidateToSample(*fSample, selected[idx], *phosCells, *vertex, *fParameters);
+    fSampleTree->Fill(); // fill fSample to sampletree
+  }
+
+  PostData(1, fParameters);
+  PostData(2, fSampleTree);
+  PostData(3, fHistList);
 }
+
 
 void ExtractorTask::Terminate ( Option_t* )
 {
+  new TCanvas;
   fCandidatePtMass->DrawCopy();
+  new TCanvas;
+  fSelectedPtMass->DrawCopy();
   return; //TODO: write ExtractorTask::Terminate
 }
 
@@ -159,12 +176,65 @@ std::vector< SampleCandidate > ExtractorTask::ExtractCandidates
 std::vector< SampleCandidate > ExtractorTask::SelectCandidates ( const std::vector< SampleCandidate >& candidates )
 {
   std::vector< SampleCandidate > selected;
+  for(unsigned int idx = 0; idx < candidates.size(); ++idx) {
+    selected.push_back(candidates[idx]);
+  }
   return selected;
 }
 
 
+void ExtractorTask::CandidateToSample ( Sample& toSample, const SampleCandidate& candidate, const AliESDCaloCells& phosCells, const AliESDVertex& vertex, const SampleParameters& params)
+{
+  // Set Vertex
+  Double_t vtxarr[3];
+  vertex.GetXYZ(vtxarr);
+  const TVector3 vtxvec(vtxarr[0], vtxarr[1], vtxarr[2]);
+  toSample.SetVertex(vtxvec);
 
-void ExtractorTask::SetParameters ( SampleParameters* params )
+
+  // Set Cluster 1 paramters
+  toSample.SetEnergy1(candidate.GetMomentum().E());
+  toSample.SetMass(candidate.GetMomentum().M());
+
+  const AliESDCaloCluster* cluster1 = candidate.GetCluster1();
+  const Float_t pos1[3] = {0};
+  candidate.GetCluster1()->GetPosition((Float_t*) pos1);;
+  const TVector3 posv1((Float_t*) pos1);
+  toSample.SetPostion1( posv1 );
+
+  toSample.Amplitude1().Reset();
+  const UInt_t nCells1 = cluster1->GetNCells();
+  for (unsigned int idx=0; idx<nCells1; ++idx) {
+    const UInt_t phosID = cluster1->GetCellAbsId(idx);
+    const Double32_t fraction = cluster1->GetCellAmplitudeFraction(idx);
+    const Double32_t amplitude =  phosCells.GetAmplitude(phosID) * fraction;
+    const UInt_t index = params.FindIndex(phosID); // index of sample coordinate system.
+    toSample.Amplitude1()[index] = amplitude;
+  }
+
+
+  // Set Cluster 2 paramters
+  toSample.SetEnergy2(candidate.GetMomentum().E());
+
+  const AliESDCaloCluster* cluster2 = candidate.GetCluster2();
+  const Float_t pos2[3] = {0};
+  candidate.GetCluster2()->GetPosition((Float_t*) pos2);
+  const TVector3 posv2((Float_t*) pos2);
+  toSample.SetPostion2( posv2 );
+
+  toSample.Amplitude2().Reset();
+  const UInt_t nCells2 = cluster2->GetNCells();
+  for (unsigned int idx=0; idx<nCells2; ++idx) {
+    const UInt_t phosID = cluster2->GetCellAbsId(idx);
+    const Double32_t fraction = cluster2->GetCellAmplitudeFraction(idx);
+    const Double32_t amplitude =  phosCells.GetAmplitude(phosID) * fraction;
+    const UInt_t index = params.FindIndex(phosID); // index of sample coordinate system.
+    toSample.Amplitude2()[index] = amplitude;
+  }
+}
+
+
+void ExtractorTask::SetParameters ( SampleParameters& params )
 {
   AliCDBEntry* entryEmc = AliCDBManager::Instance()->Get("PHOS/Calib/RecoParam",-1);
   if( ! entryEmc )
@@ -183,7 +253,7 @@ void ExtractorTask::SetParameters ( SampleParameters* params )
   const Int_t nGood = kNMod*kNRowX*kNColZ - calibData->GetNumOfEmcBadChannels();
   
   // Number of Good
-  params->SetNGood(nGood);
+  params.SetNGood(nGood);
   
   Int_t nGoodFound = 0;
   for(UInt_t mod = 0; mod < kNMod; ++mod) {
@@ -193,16 +263,16 @@ void ExtractorTask::SetParameters ( SampleParameters* params )
 	  // ID
 	  Int_t tmpID = 0;
 	  geometry->RelPosToAbsId(mod+1, xrow+1, zcol+1, tmpID);
-	  params->SetID(nGoodFound, tmpID /*id*/);
+	  params.SetID(nGoodFound, tmpID /*id*/);
 	  // CC
-	  params->SetCC(nGoodFound, calibData->GetADCchannelEmc(mod, zcol, xrow) );
+	  params.SetCC(nGoodFound, calibData->GetADCchannelEmc(mod, zcol, xrow) );
 	  // Local Positions (x^L))
 	  Int_t relId[4];
 	  Float_t x, z;
 	  geometry->AbsToRelNumbering(tmpID, relId); // real numbering stored to @param relID
 	  geometry->RelPosInModule(relId, x, z); // local position
 	  //TVector3* localPos = new TVector3(x, 0., z);
-	  params->SetLocalPos( nGoodFound, TVector3(x, 0, z) );
+	  params.SetLocalPos( nGoodFound, TVector3(x, 0, z) );
 	  
 	  ++nGoodFound;
 	} // end if
@@ -222,13 +292,13 @@ void ExtractorTask::SetParameters ( SampleParameters* params )
   const Float_t * pin = emcGeometry->GetAPDHalfSize() ;
   const Float_t * preamp = emcGeometry->GetPreampHalfSize() ;
   Float_t crystalShift = -inthermo[1]+strip[1]+splate[1]+crystal[1]-emcGeometry->GetAirGapLed()/2.+pin[1]+preamp[1] ;
-  params->SetCS( crystalShift );
+  params.SetCS( crystalShift );
 
-  params->SetLogWeight(recoParam->GetEMCLogWeight());
+  params.SetLogWeight(recoParam->GetEMCLogWeight());
 
   if( recoParam->GetNonlinearityCorrectionVersion() == TString("Henrik2010") )
-    params->SetNonLinearParams(TArrayF(7, recoParam->GetNonlinearityParams()));
-  params->SetNonLinearCorrectionVersion(recoParam->GetNonlinearityCorrectionVersion());;
+    params.SetNonLinearParams(TArrayF(7, recoParam->GetNonlinearityParams()));
+  params.SetNonLinearCorrectionVersion(recoParam->GetNonlinearityCorrectionVersion());;
   
   for(Int_t mod = 0; mod < 5; mod++){
     //If GeoManager exists, take matrixes from it
@@ -238,7 +308,7 @@ void ExtractorTask::SetParameters ( SampleParameters* params )
       if (!gGeoManager->cd(path)){
 	Error("SetParameters", "Geo manager can not find path");
       }
-      params->SetT(mod, *gGeoManager->GetCurrentMatrix() );
+      params.SetT(mod, *gGeoManager->GetCurrentMatrix() );
     } // end if 
   } // end for mod
 }
