@@ -27,7 +27,6 @@
 #include "AliPHOSGeometry.h"
 #include <TString.h>
 #include <TMath.h>
-#include <bits/mathdef.h>
 
 
 
@@ -163,7 +162,7 @@ void SampleParameters::Print ( Option_t* /*option*/ ) const
 }
 
 
-const Int_t SampleParameters::FindIndex ( const UInt_t phosID ) const
+Int_t SampleParameters::FindIndex ( const UInt_t phosID ) const
 {
   // returns the index of phosID, if found!
   // if not found, returns -1.
@@ -243,7 +242,7 @@ void SampleParameters::SetLocalPos ( UInt_t index, const TVector3& localPos )
 
 void SampleParameters::SetT ( UInt_t module, const TGeoHMatrix& T )
 {
-  if( 5 <= module );
+  if( 5 <= module )
     Error("SetT", "module out of bounds");
 
   delete fT[module]; // becouse AddAt does not clean, TODO: verify!

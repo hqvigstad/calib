@@ -11,3 +11,5 @@ if(ALIROOT_FOUND)
 endif(ALIROOT_FOUND)
 
 
+
+add_subdirectory(local)

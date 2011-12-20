@@ -47,20 +47,20 @@ public:
 
 
   // *** Getters ***
-  const Int_t GetNGood() const { return fNGood; }
+  Int_t GetNGood() const { return fNGood; }
   const TArrayI& GetIDArray() const { return fIDArray; }
-  const Int_t FindIndex(UInt_t phosID) const;
+  Int_t FindIndex(UInt_t phosID) const;
 
   const TArrayF& GetCCArray() const { return fCCArray; }
-  const Float_t GetCS() const { return fCS; }
+  Float_t GetCS() const { return fCS; }
   const TVector3* GetLocalPos(UInt_t index) const;
-  const Float_t GetLogWeight() const { return fLogWeight; }
+  Float_t GetLogWeight() const { return fLogWeight; }
   const TArrayF& GetNonLinearParams() const { return fNonLinearParams; }
   const TString& GetNonLinearCorrectionVersion() const { return fNonLinearCorrectionVersion; }
   const TGeoHMatrix* GetT(UInt_t module) const;
   const TVector3& GetIncidentVector() const { return fIncidentVector; }
-  const Float_t GetPara() const {return fParA; }
-  const Float_t GetParb() const {return fParB; }
+  Float_t GetPara() const {return fParA; }
+  Float_t GetParb() const {return fParB; }
 
 
   // *** Setters ***

@@ -41,7 +41,7 @@ public:
   const TVector3& GetVertex() const { return fVertex; }
   void SetVertex(const TVector3& vertex) {fVertex = vertex;}
 
-  const Float_t GetMass() const { return fMass; }
+  Float_t GetMass() const { return fMass; }
   void SetMass(const Float_t mass) {fMass = mass;}
 
 
@@ -69,7 +69,7 @@ public:
 
 private:
   Sample(const Sample& other); // Not implemted, declared for suppression of warnings
-  virtual Sample& operator=(const Sample& other); // Not implemted, declared for suppression of warnings
+  Sample& operator=(const Sample& other); // Not implemted, declared for suppression of warnings
 
   UInt_t fN; // N, length of amplitudes, Immutable
 

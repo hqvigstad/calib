@@ -31,7 +31,7 @@ class AliVertex;
 class TLorentzVector;
 class AliESDCaloCluster;
 
-class SampleCandidate : TObject {
+class SampleCandidate : public TObject {
 public:
   SampleCandidate();
   SampleCandidate (AliESDCaloCluster* clu1, AliESDCaloCluster* clu2, AliESDVertex* vtx);
@@ -50,6 +50,8 @@ private:
   AliESDCaloCluster* fClu1;
   AliESDCaloCluster* fClu2;
   AliESDVertex* fVertex;
+
+  ClassDef(SampleCandidate, 1);
 };
 
 #endif // SAMPLECANDIDATE_H

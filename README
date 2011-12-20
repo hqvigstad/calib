@@ -6,3 +6,8 @@ and ROOT needs to be compiled with alien support.
 
 To get/build/install ROOT (without full ALIROOT/alien support):
 http://root.cern.ch/drupal/content/installing-root-source
+
+
+to run extractor localy use
+sample/local/runLocal.C
+It requires a file named files.txt with a list of paths to local ESDs
