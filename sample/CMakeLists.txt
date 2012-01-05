@@ -1,5 +1,5 @@
 
-add_library(libSample Sample.cxx SampleParameters.cxx)
+add_library(libSample Sample.cxx SampleParameters.cxx SampleReader.cxx )
 
 find_package(ALIROOT COMPONENTS PHOS)
 if(ALIROOT_FOUND)
