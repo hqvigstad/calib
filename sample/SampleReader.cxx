@@ -22,7 +22,7 @@
 
 #include "SampleReader.h"
 
-SampleReader::SampleReader() {
+SampleReader::SampleReader(TString filename) {
   //TODO
 }
 

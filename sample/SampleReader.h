@@ -23,17 +23,29 @@
 #ifndef SAMPLEREADER_H
 #define SAMPLEREADER_H
 
-#include <../../opt/alice/root/v5-30-03/include/TObject.h>
+#include <TObject.h>
+#include "Sample.h"
+#include "SampleParameters.h"
 
 
-class SampleReader : public TObject {
+class SampleReader : public TObject
+{
+public:
+  SampleReader(TString filename = TString(""));
+  
+  SampleReader ( const TObject& object );
+  virtual ~SampleReader();
+  virtual SampleReader& operator= ( const SampleReader& other );
 
-  public:
-    SampleReader();
-    SampleReader ( const TObject& object );
-    virtual ~SampleReader();
-    virtual SampleReader& operator= ( const SampleReader& other );
-    //TODO
+
+  const SampleParameters & GetParameters();
+
+  UInt_t GetNSamples();
+  const Sample & GetSample(int index);
+  
+
+private:
+  //TODO
 };
 
 #endif // SAMPLEREADER_H
