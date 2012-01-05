@@ -161,7 +161,7 @@ void ExtractorTask::Terminate ( Option_t* )
 
 std::vector< AliESDCaloCluster* > ExtractorTask::SelectClusters ( const TRefArray& clusters )
 {
-  std::vector<AliESDCaloCluster*> selected(clusters.GetEntries());
+  std::vector<AliESDCaloCluster*> selected;
   for(int idx = 0; idx < clusters.GetEntriesFast(); ++idx){
     AliESDCaloCluster* cluster = dynamic_cast<AliESDCaloCluster*> (clusters.At(idx));
     if(! cluster) {
