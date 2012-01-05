@@ -70,7 +70,7 @@ private:
     const static UInt_t kNColZ = 56;
 
     
-    void SetParameters(SampleParameters& params);
+    void SetParameters(SampleParameters& params, const AliESDEvent&);
 
     // *** member variables ***
     SampleParameters* fParameters;

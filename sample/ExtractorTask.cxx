@@ -69,18 +69,28 @@ ExtractorTask::~ExtractorTask()
 
 void ExtractorTask::UserCreateOutputObjects()
 {
-  // *** Initiallize parameters ***
-  fParameters = new SampleParameters();
-  SetParameters(*fParameters);
-  Int_t nGoodCells = fParameters->GetNGood();
+  // input
+  fBranchNames = "ESD:AliESDRun.,AliESDHeader.,Tracks AOD:header,tracks";
 
+  
+  // *** Initiallize parameters ***
+//   fParameters = new SampleParameters();
+//   AliESDEvent* esdEvent = dynamic_cast<AliESDEvent*>(InputEvent());
+//   if( ! esdEvent )
+//     Error("UserExec", "InputEvent did not cast to esd");
+//   SetParameters(*fParameters, *esdEvent);
+//   Int_t nGoodCells = fParameters->GetNGood();
+
+
+  
   // *** Initiallize Sample Tree """
-  fSample = new Sample(nGoodCells);
+  //fSample = new Sample(nGoodCells);
   fSampleTree = new TTree("fSampleTree", "Sample Tree");
   fSampleTree->Branch("samples", "Sample", &fSample);
 
   // *** Histograms ***
   fHistList = new TList;
+  fHistList->SetOwner(); //TODO: check if list of hists should be owner.
 
   fCandidatePtMass = new TH2I("fCandidatePtMass", "fCandidatePtMass", 100, 0, 10,   100, 0, 0.5);
   fHistList->Add(fCandidatePtMass);
@@ -88,7 +98,7 @@ void ExtractorTask::UserCreateOutputObjects()
   fHistList->Add(fSelectedPtMass);
 
   PostData(1, fParameters);
-  PostData(2, fSample);
+  PostData(2, fSampleTree);
   PostData(3, fHistList);
 }
 
@@ -100,9 +110,21 @@ Bool_t ExtractorTask::UserNotify()
 
 void ExtractorTask::UserExec ( Option_t* )
 {
+  
   AliESDEvent* esdEvent = dynamic_cast<AliESDEvent*>(InputEvent());
   if( ! esdEvent )
     Error("UserExec", "InputEvent did not cast to esd");
+
+
+  // *** Initiallize parameters ***
+  if( fParameters ) {
+    fParameters = new SampleParameters();
+    SetParameters(*fParameters, *esdEvent);
+    Int_t nGoodCells = fParameters->GetNGood();
+    fSample = new Sample(nGoodCells);
+  }
+
+
   AliESDVertex* vertex = (AliESDVertex*) esdEvent->GetPrimaryVertex();
   AliESDCaloCells* phosCells = esdEvent->GetPHOSCells();
     
@@ -234,9 +256,10 @@ void ExtractorTask::CandidateToSample ( Sample& toSample, const SampleCandidate&
 }
 
 
-void ExtractorTask::SetParameters ( SampleParameters& params )
+void ExtractorTask::SetParameters ( SampleParameters& params, const AliESDEvent& esdEvent )
 {
-  AliCDBEntry* entryEmc = AliCDBManager::Instance()->Get("PHOS/Calib/RecoParam",-1);
+
+  AliCDBEntry* entryEmc = AliCDBManager::Instance()->Get("PHOS/Calib/RecoParam");
   if( ! entryEmc )
     Error("SetParameters", "ocdb entry (PHOS/Calib/RecoParam) not found");
   const TObjArray* recoArray = dynamic_cast<TObjArray*> (entryEmc->GetObject());
@@ -246,7 +269,7 @@ void ExtractorTask::SetParameters ( SampleParameters& params )
   if( ! recoParam )
     Error("SetParameters","recoParam not found");
 
-  const AliPHOSGeometry* geometry = AliPHOSGeometry::GetInstance("IHEP");
+  AliPHOSGeometry* geometry = AliPHOSGeometry::GetInstance("IHEP");
   const AliPHOSEMCAGeometry * emcGeometry = geometry->GetEMCAGeometry();
   
   const AliPHOSCalibData* calibData = new AliPHOSCalibData();
