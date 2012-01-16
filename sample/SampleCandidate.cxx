@@ -27,7 +27,7 @@
 #include <TVector3.h>
 #include <AliESDVertex.h>
 
-ClassImp(SampleCandidate);
+ClassImp(SampleCandidate)
 
 SampleCandidate::SampleCandidate()
 : TObject(),

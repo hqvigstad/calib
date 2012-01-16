@@ -38,6 +38,8 @@ public:
   const Calibrator& operator= ( const TObject& object );
 
   static Double_t M(Sample s, SampleParameters p);
+  static std::vector<Double_t> M_p(Sample s, SampleParameters p);
+  
 
   virtual SampleParameters Calibrate(std::vector<Sample> & samples, SampleParameters& initalParams) = 0;
 
